@@ -1,0 +1,454 @@
+{
+	"info": {
+		"_postman_id": "c1f7a08b-592b-4e63-8a39-reporting-service",
+		"name": "SOA TH5 - Reporting Service (Port 8003)",
+		"description": "Bộ sưu tập API cho Bài Thực Hành Số 5 - Kiến trúc SOA (Dịch vụ Báo cáo & Thống kê tích hợp liên dịch vụ)",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://127.0.0.1:8003",
+			"type": "string"
+		},
+		{
+			"key": "auth_url",
+			"value": "http://127.0.0.1:8000",
+			"type": "string"
+		},
+		{
+			"key": "token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "snapshot_id",
+			"value": "1",
+			"type": "string"
+		}
+	],
+	"item": [
+		{
+			"name": "0. Xác thực (Auth Service - Port 8000)",
+			"item": [
+				{
+					"name": "Đăng nhập lấy Token (POST /login)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"if (jsonData.access_token) {",
+									"    pm.collectionVariables.set('token', jsonData.access_token);",
+									"    console.log('Saved token: ' + jsonData.access_token);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"userName\": \"student\",\n    \"password\": \"MTIzNDU2\"\n}"
+						},
+						"url": {
+							"raw": "{{auth_url}}/login",
+							"host": [
+								"{{auth_url}}"
+							],
+							"path": [
+								"login"
+							]
+						},
+						"description": "Đăng nhập vào Auth Service (Service 2 - Port 8000) với userName: student, password base64: MTIzNDU2 (123456) để lấy access_token JWT."
+					},
+					"response": []
+				},
+				{
+					"name": "Kiểm tra Token trực tiếp (GET /auth)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{auth_url}}/auth",
+							"host": [
+								"{{auth_url}}"
+							],
+							"path": [
+								"auth"
+							]
+						},
+						"description": "Kiểm tra tính hợp lệ của token trực tiếp tại Auth Service (Port 8000)."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "1. Kiểm tra trạng thái hệ thống",
+			"item": [
+				{
+					"name": "Health Check (GET /health)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/health",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"health"
+							]
+						},
+						"description": "Kiểm tra trạng thái hoạt động của Reporting Service (Port 8003) và các dịch vụ phụ thuộc."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "2. Báo cáo & Thống kê (SOA Aggregation)",
+			"item": [
+				{
+					"name": "Báo cáo KPI Tổng Quan (GET /reports/summary)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/reports/summary",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"reports",
+								"summary"
+							]
+						},
+						"description": "Thống kê tổng hợp: Hàng tồn kho, Hàng đã bán, Doanh thu, Chi phí, Lợi nhuận và Tỷ suất lợi nhuận qua liên lạc HTTP với Product Service (8001) và Order Service (8002)."
+					},
+					"response": []
+				},
+				{
+					"name": "Báo cáo theo Sản Phẩm (GET /reports/products)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/reports/products",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"reports",
+								"products"
+							]
+						},
+						"description": "Thống kê chi tiết từng sản phẩm: số lượng tồn hiện tại, số lượng đã bán, doanh thu, chi phí, lợi nhuận mang lại và trạng thái tồn kho."
+					},
+					"response": []
+				},
+				{
+					"name": "Báo cáo theo Đơn Hàng (GET /reports/orders)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/reports/orders",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"reports",
+								"orders"
+							]
+						},
+						"description": "Thống kê phân loại đơn hàng theo trạng thái (pending, confirmed, shipping, completed, cancelled), giá trị đơn trung bình (AOV) và tỷ lệ thành công."
+					},
+					"response": []
+				},
+				{
+					"name": "Báo cáo Tích Hợp Toàn Diện (GET /reports/full)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/reports/full",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"reports",
+								"full"
+							]
+						},
+						"description": "Báo cáo tổng thể gộp cả KPI tổng quan, chi tiết sản phẩm và chi tiết đơn hàng cho bảng điều khiển Dashboard."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "3. Quản lý Bản Lưu Báo Cáo (Snapshots - CSDL Riêng)",
+			"item": [
+				{
+					"name": "Danh sách các bản lưu báo cáo (GET /reports/snapshots)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/reports/snapshots",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"reports",
+								"snapshots"
+							]
+						},
+						"description": "Lấy danh sách lịch sử các bản chụp báo cáo đã lưu trong cơ sở dữ liệu riêng của Reporting Service (reports.sqlite)."
+					},
+					"response": []
+				},
+				{
+					"name": "Tạo bản lưu báo cáo mới (POST /reports/snapshots)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"if (jsonData.data && jsonData.data.id) {",
+									"    pm.collectionVariables.set('snapshot_id', jsonData.data.id);",
+									"    console.log('Created snapshot ID: ' + jsonData.data.id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"title\": \"Báo cáo tổng kết kinh doanh tháng 11\",\n    \"notes\": \"Chốt số liệu tồn kho và đơn hàng thành công qua Postman\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/reports/snapshots",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"reports",
+								"snapshots"
+							]
+						},
+						"description": "Chụp nhanh số liệu thời gian thực từ Product Service và Order Service và lưu vĩnh viễn vào CSDL riêng."
+					},
+					"response": []
+				},
+				{
+					"name": "Xem chi tiết một bản lưu báo cáo (GET /reports/snapshots/:id)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/reports/snapshots/{{snapshot_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"reports",
+								"snapshots",
+								"{{snapshot_id}}"
+							]
+						},
+						"description": "Lấy chi tiết thông tin đầy đủ của một bản lưu báo cáo trong quá khứ."
+					},
+					"response": []
+				},
+				{
+					"name": "Xóa bản lưu báo cáo (DELETE /reports/snapshots/:id)",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/reports/snapshots/{{snapshot_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"reports",
+								"snapshots",
+								"{{snapshot_id}}"
+							]
+						},
+						"description": "Xóa bản lưu báo cáo khỏi CSDL."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "4. Kiểm thử Bảo mật & Ngoại lệ (Exceptions)",
+			"item": [
+				{
+					"name": "Từ chối khi thiếu Token (401)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/reports/summary",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"reports",
+								"summary"
+							]
+						},
+						"description": "Kiểm tra tính bảo mật SOA: Yêu cầu không có Authorization Bearer Token bị từ chối với HTTP 401."
+					},
+					"response": []
+				},
+				{
+					"name": "Từ chối khi Token không hợp lệ (401)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer token-gia-mao-123456"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/reports/summary",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"reports",
+								"summary"
+							]
+						},
+						"description": "Kiểm tra xác thực qua Auth Service (Port 8000): Token giả mạo bị từ chối với HTTP 401."
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}
