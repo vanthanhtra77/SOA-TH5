@@ -42,6 +42,13 @@ class ProductServiceClient
         ],
         [
             'id' => 5,
+            'name' => 'Màn hình Dell UltraSharp U2723QE 4K',
+            'description' => 'Màn hình đồ họa IPS Black',
+            'price' => 13800000.00,
+            'quantity' => 12,
+        ],
+        [
+            'id' => 6,
             'name' => 'Tai nghe Sony WH-1000XM5',
             'description' => 'Tai nghe chống ồn chủ động cao cấp',
             'price' => 7990000.00,
@@ -62,7 +69,7 @@ class ProductServiceClient
     }
 
     /**
-     * Lấy danh sách tất cả các sản phẩm và số lượng tồn kho (GET /products)
+     * Lấy danh sách tất cả các sản phẩm từ Product Service (GET /products)
      */
     public function getAllProducts(?string $token = null): array
     {
@@ -126,5 +133,49 @@ class ProductServiceClient
             'products' => [],
             'error' => $data['message'] ?? 'Lỗi lấy dữ liệu sản phẩm từ Product Service.',
         ];
+    }
+
+    /**
+     * Lấy chi tiết một sản phẩm theo ID từ Product Service (GET /products/{id})
+     */
+    public function getProductById(int $id, ?string $token = null): array
+    {
+        if ($this->isMock()) {
+            foreach (self::$mockProducts as $p) {
+                if ($p['id'] === $id) {
+                    return ['success' => true, 'product' => $p, 'status_code' => 200];
+                }
+            }
+            return ['success' => false, 'product' => null, 'status_code' => 404, 'message' => 'Không tìm thấy sản phẩm.'];
+        }
+
+        $url = "{$this->productServiceUrl}/{$id}";
+        $headers = ['Accept: application/json', 'User-Agent: ReportingService/1.0'];
+        if (!empty($token)) {
+            $headers[] = 'Authorization: Bearer ' . $token;
+        }
+
+        $ch = curl_init();
+        curl_setopt_array($ch, [
+            CURLOPT_URL => $url,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_HTTPGET => true,
+            CURLOPT_TIMEOUT => $this->timeout,
+            CURLOPT_CONNECTTIMEOUT => $this->timeout,
+            CURLOPT_HTTPHEADER => $headers,
+            CURLOPT_SSL_VERIFYPEER => false,
+            CURLOPT_SSL_VERIFYHOST => false,
+        ]);
+
+        $responseBody = curl_exec($ch);
+        $statusCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+
+        $data = json_decode($responseBody, true);
+        if ($statusCode === 200 && isset($data['data'])) {
+            return ['success' => true, 'product' => $data['data'], 'status_code' => 200];
+        }
+
+        return ['success' => false, 'product' => null, 'status_code' => $statusCode ?: 404, 'message' => $data['message'] ?? 'Lỗi lấy thông tin sản phẩm'];
     }
 }

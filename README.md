@@ -1,39 +1,35 @@
 # SOA TH5 - Dịch Vụ Báo Cáo & Thống Kê (Reporting Service)
 
-[![Tests](https://img.shields.io/badge/PHPUnit-12%20Passed%2C%20159%20Assertions-brightgreen)](tests/ReportTest.php)
+[![Tests](https://img.shields.io/badge/PHPUnit-15%20Passed%2C%20139%20Assertions-brightgreen)](tests/ReportTest.php)
 [![Architecture](https://img.shields.io/badge/Architecture-SOA%20Aggregator-blue)]()
 [![Framework](https://img.shields.io/badge/Framework-Lumen%2010-red)]()
 [![PHP](https://img.shields.io/badge/PHP-8.4-purple)]()
 
 Dự án **Bài Thực Hành Số 5** - Môn Kiến Trúc Hướng Dịch Vụ (Service-Oriented Architecture - SOA).
-Dịch vụ hoạt động độc lập trên cổng **8003** với cơ sở dữ liệu riêng biệt `database/reports.sqlite`, thực hiện tổng hợp dữ liệu (Aggregator Pattern) từ **Product Service (Port 8001)** và **Order Service (Port 8002)** và xác thực tập trung qua **Auth Service (Port 8000)**.
+Dịch vụ hoạt động độc lập trên cổng **8003** với cơ sở dữ liệu riêng biệt `database/reports.sqlite` gồm 2 bảng chuẩn theo Phụ lục đề bài: `orders_reports` và `product_reports`. Đóng vai trò là **Service Aggregator** tổng hợp dữ liệu từ **Product Service (Port 8001)** và **Order Service (Port 8002)**, đồng thời xác thực tập trung qua **Auth Service (Port 8000)**.
 
 ---
 
-## 🎯 Chức Năng Chính
-- **Thống kê tổng quan**: Số lượng hàng tồn kho, hàng bán được, doanh thu, chi phí, lợi nhuận và biên lợi nhuận.
-- **Báo cáo theo sản phẩm**: Chi tiết tồn kho, số lượng đã bán, doanh thu và đóng góp lợi nhuận của từng mặt hàng.
-- **Báo cáo theo đơn hàng**: Phân tích trạng thái đơn (pending, confirmed, shipping, completed, cancelled), giá trị đơn hàng trung bình (AOV), tỷ lệ hoàn tất.
-- **Quản lý Bản Lưu Báo Cáo (Snapshots)**: Lưu trữ các mốc thời gian báo cáo vào CSDL riêng `reports.sqlite` (CRUD).
-- **Giao diện Web Dashboard**: Trực quan hóa số liệu thời gian thực bằng Tailwind CSS responsive.
-
----
-
-## 🏗️ Hệ Sinh Thái 4 Dịch Vụ SOA
-
-| Dịch vụ | Cổng | Cơ sở dữ liệu | Vai trò |
-| :--- | :---: | :--- | :--- |
-| **Auth Service (TH2)** | `8000` | `database.sqlite` | Quản lý người dùng, cấp phát và xác thực JWT |
-| **Product Service (TH3)** | `8001` | `products.sqlite` | Quản lý danh mục & số lượng tồn kho sản phẩm |
-| **Order Service (TH4)** | `8002` | `orders.sqlite` | Quản lý đơn hàng, khấu trừ & hoàn kho tự động |
-| **Reporting Service (TH5)** | `8003` | `reports.sqlite` | **Tổng hợp báo cáo kinh doanh liên dịch vụ (Aggregator)** |
+## 🎯 Chức Năng Chính (Theo Đề Bài)
+- **Báo cáo theo sản phẩm (`product_reports`)**:
+  - `GET /reports/products`: Lấy danh sách tất cả các báo cáo theo sản phẩm.
+  - `GET /reports/products/{id}`: Lấy chi tiết báo cáo cho một sản phẩm.
+  - `POST /reports/products`: Tạo báo cáo sản phẩm mới (tổng hợp tồn kho và hàng bán).
+  - `DELETE /reports/products/{id}`: Xóa báo cáo sản phẩm.
+- **Báo cáo theo đơn hàng (`orders_reports`)**:
+  - `GET /reports/orders`: Lấy danh sách tất cả các báo cáo theo đơn hàng.
+  - `GET /reports/orders/{id}`: Lấy chi tiết báo cáo cho một đơn hàng.
+  - `POST /reports/orders`: Tạo báo cáo đơn hàng mới (tính toán `total_revenue`, `total_cost`, `total_profit`).
+  - `DELETE /reports/orders/{id}`: Xóa báo cáo đơn hàng.
+- **KPI Real-time Dashboard**:
+  - `GET /reports/summary`: Thống kê tổng hợp số lượng hàng tồn, hàng bán được, doanh thu, chi phí, lợi nhuận thời gian thực.
+  - Giao diện Web tương tác trực quan với Tailwind CSS.
 
 ---
 
 ## 🚀 Khởi Chạy Nhanh
 
-### 1. Bật toàn bộ hệ thống (4 Microservices)
-Chạy script PowerShell đi kèm:
+### 1. Bật toàn bộ hệ sinh thái (4 Services)
 ```powershell
 .\start_services.ps1
 ```
@@ -46,7 +42,7 @@ Chạy script PowerShell đi kèm:
 ### 3. Chạy kiểm thử tự động
 ```powershell
 .\run_tests.ps1
-# hoặc: php vendor/phpunit/phpunit/phpunit
+# hoặc: php vendor/phpunit/phpunit/phpunit --testdox
 ```
 
 ---
